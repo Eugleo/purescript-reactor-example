@@ -10,6 +10,7 @@ You can edit this file as you like.
   , "effect"
   , "halogen"
   , "halogen-hooks"
+  , "halogen-subscriptions"
   , "prelude"
   , "psci-support"
   ]
