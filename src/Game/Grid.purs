@@ -4,7 +4,6 @@ import Prelude
 import Color (Color)
 import Data.Array (replicate, (!!), modifyAtIndices)
 import Data.Maybe (Maybe)
-import Web.HTML.HTMLTableCellElement (cellIndex)
 
 data Cell
   = Empty
