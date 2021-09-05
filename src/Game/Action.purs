@@ -63,8 +63,8 @@ triggerPause = Action $ liftF $ Modify (\s -> s { paused = not s.paused }) (cons
 preventDefaultBehavior :: forall state m. Action m { paused :: Boolean | state } DefaultBehavior
 preventDefaultBehavior = Action $ liftF $ Modify identity (const Prevent)
 
-performDefaultBehavior :: forall state m. Action m { paused :: Boolean | state } DefaultBehavior
-performDefaultBehavior = Action $ liftF $ Modify identity (const Perform)
+executeDefaultBehavior :: forall state m. Action m { paused :: Boolean | state } DefaultBehavior
+executeDefaultBehavior = Action $ liftF $ Modify identity (const Execute)
 
 evalAction :: forall state m a. MonadEffect m => StateId state -> Action m state a -> HookM m a
 evalAction stateId (Action action) = foldFree (go stateId) action

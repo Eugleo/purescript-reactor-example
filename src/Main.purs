@@ -9,7 +9,7 @@ import Effect (Effect)
 import Event.KeypressEvent (KeypressEvent(..))
 import Event.MouseEvent (MouseEvent(..))
 import Event.TickEvent (TickEvent(..))
-import Game.Action (get, modify_, pause, performDefaultBehavior, preventDefaultBehavior, triggerPause)
+import Game.Action (get, modify_, pause, executeDefaultBehavior, preventDefaultBehavior, triggerPause)
 import Game.Color (blue400, gray200)
 import Game.Config (Config)
 import Game.Grid as Grid
@@ -69,7 +69,7 @@ config =
       " " -> do
         triggerPause
         preventDefaultBehavior
-      _ -> performDefaultBehavior
+      _ -> executeDefaultBehavior
 
   onTick (TickEvent { delta }) = do
     { velocity, x, y } <- get

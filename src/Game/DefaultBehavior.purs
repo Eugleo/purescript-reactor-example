@@ -6,7 +6,7 @@ import Effect.Class (class MonadEffect, liftEffect)
 import Halogen.Hooks (HookM)
 import Web.Event.Event (Event, preventDefault)
 
-data DefaultBehavior = Prevent | Perform
+data DefaultBehavior = Prevent | Execute
 
 derive instance eqDefaultBehavior :: Eq DefaultBehavior
 
