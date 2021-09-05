@@ -8,6 +8,9 @@ import Partial.Unsafe (unsafePartial)
 fromHex :: String -> Color
 fromHex = (unsafePartial fromJust) <<< fromHexString
 
+-- The following colors are a part of the default Tailwind CSS color scheme
+-- https://tailwindcss.com/docs/customizing-colors
+
 gray50 :: Color
 gray50 = fromHex "#F9FAFB"
 
