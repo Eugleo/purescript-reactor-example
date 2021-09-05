@@ -27,9 +27,10 @@ import Game.DefaultBehavior (DefaultBehavior, optionallyPreventDefault)
 import Game.DefaultBehavior as DefaultBehavior
 import Game.Grid (Grid)
 import Game.Grid as Grid
-import Graphics.CanvasAction (class CanvasStyle, class MonadCanvasAction, Context2D, fillRect, filled, launchCanvasAff_, setFillStyle)
+import Graphics.CanvasAction (class CanvasStyle, class MonadCanvasAction, Context2D, clearRect, fillRect, fillRectFull, filled, launchCanvasAff_, setFillStyle)
 import Graphics.CanvasAction as Canvas
 import Graphics.CanvasAction.Path (FillRule(..), arcBy_, fill, moveTo, runPath)
+import Halogen (modify_)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
@@ -127,7 +128,7 @@ component { title, init, draw, onKey, onMouse, onTick } =
         [ HH.h1 [ HP.classes [ H.ClassName "text-3xl font-bold mb-8" ] ] [ HH.text title ]
         , HH.canvas
             [ HP.classes
-                [ H.ClassName "rounded-lg" ]
+                [ H.ClassName "rounded-lg bg-gray-100" ]
             , HP.id_ canvasId
             , HP.width 1080
             , HP.height 720
@@ -239,27 +240,30 @@ renderGrid internalId worldId listener = do
     withJust context \ctx -> do
       world <- Hooks.get worldId
       let grid = draw world
-      when (lastGrid /= Just grid) $ do
-        log "Redrawing"
-        for_ (enumerate grid) \(x /\ col) ->
-          for_ (enumerate col) \(y /\ cell) -> case cell of
-            Grid.Empty -> liftEffect $ launchCanvasAff_ ctx do
-              setFillStyle gray100
-              fillRect
-                { height: 30.0
-                , width: 30.0
-                , x: toNumber (x * 30)
-                , y: toNumber (y * 30)
-                }
-            Grid.Filled color -> liftEffect $ launchCanvasAff_ ctx do
-              drawRoundedRectangle
-                { height: 30.0
-                , width: 30.0
-                , x: toNumber (x * 30)
-                , y: toNumber (y * 30)
-                }
-                color
-                10.0
+      for_ (enumerate grid) \(x /\ col) ->
+        for_ (enumerate col) \(y /\ cell) -> do
+          let
+            currentValue = Grid.index grid x y
+            lastValue = map (\g -> Grid.index g x y) lastGrid
+          when (Just (currentValue) /= lastValue) $ do
+            case cell of
+              Grid.Empty -> liftEffect $ launchCanvasAff_ ctx do
+                clearRect
+                  { height: 30.0
+                  , width: 30.0
+                  , x: toNumber (x * 30)
+                  , y: toNumber (y * 30)
+                  }
+              Grid.Filled color -> liftEffect $ launchCanvasAff_ ctx do
+                drawRoundedRectangle
+                  { height: 30.0
+                  , width: 30.0
+                  , x: toNumber (x * 30)
+                  , y: toNumber (y * 30)
+                  }
+                  color
+                  10.0
+            Hooks.modify_ internalId \s -> s { lastGrid = Just grid }
 
 drawRoundedRectangle
   :: forall region m color
