@@ -10,5 +10,9 @@ data DefaultBehavior = Prevent | Execute
 
 derive instance eqDefaultBehavior :: Eq DefaultBehavior
 
-optionallyPreventDefault :: forall m. MonadEffect m => DefaultBehavior -> Event -> HookM m Unit
-optionallyPreventDefault behavior = when (behavior == Prevent) <<< liftEffect <<< preventDefault
+optionallyPreventDefault ::
+  forall m. MonadEffect m => DefaultBehavior -> Event -> HookM m Unit
+optionallyPreventDefault behavior =
+  when (behavior == Prevent)
+    <<< liftEffect
+    <<< preventDefault

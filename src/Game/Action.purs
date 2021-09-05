@@ -1,7 +1,6 @@
 module Game.Action where
 
 import Prelude
-
 import Control.Monad.Free (Free, foldFree, liftF)
 import Control.Monad.Rec.Class (class MonadRec, Step(..), tailRecM)
 import Control.Monad.Trans.Class (lift)
@@ -18,7 +17,8 @@ data ActionF m state a
 
 derive instance functorActionF :: Functor m => Functor (ActionF m state)
 
-newtype Action m state a = Action (Free (ActionF m state) a)
+newtype Action m state a =
+  Action (Free (ActionF m state) a)
 
 derive newtype instance functorAction :: Functor (Action m state)
 derive newtype instance applyAction :: Apply (Action m state)
@@ -32,9 +32,10 @@ instance monadEffectAction :: MonadEffect m => MonadEffect (Action m state) wher
   liftEffect = Action <<< liftF <<< Lift <<< liftEffect
 
 instance monadRecAction :: MonadRec (Action m state) where
-  tailRecM k a = k a >>= case _ of
-    Loop x -> tailRecM k x
-    Done y -> pure y
+  tailRecM k a =
+    k a >>= case _ of
+      Loop x -> tailRecM k x
+      Done y -> pure y
 
 randomPositive :: forall state m. Int -> Action m state Int
 randomPositive = randomInRange 0
@@ -60,13 +61,16 @@ unpause = Action $ liftF $ Modify (\s -> s { paused = false }) (const unit)
 triggerPause :: forall state m. Action m { paused :: Boolean | state } Unit
 triggerPause = Action $ liftF $ Modify (\s -> s { paused = not s.paused }) (const unit)
 
-preventDefaultBehavior :: forall state m. Action m { paused :: Boolean | state } DefaultBehavior
+preventDefaultBehavior ::
+  forall state m. Action m { paused :: Boolean | state } DefaultBehavior
 preventDefaultBehavior = Action $ liftF $ Modify identity (const Prevent)
 
-executeDefaultBehavior :: forall state m. Action m { paused :: Boolean | state } DefaultBehavior
+executeDefaultBehavior ::
+  forall state m. Action m { paused :: Boolean | state } DefaultBehavior
 executeDefaultBehavior = Action $ liftF $ Modify identity (const Execute)
 
-evalAction :: forall state m a. MonadEffect m => StateId state -> Action m state a -> HookM m a
+evalAction ::
+  forall state m a. MonadEffect m => StateId state -> Action m state a -> HookM m a
 evalAction stateId (Action action) = foldFree (go stateId) action
   where
   go :: forall state m a. MonadEffect m => StateId state -> ActionF m state a -> HookM m a

@@ -27,7 +27,17 @@ import Game.DefaultBehavior (DefaultBehavior, optionallyPreventDefault)
 import Game.DefaultBehavior as DefaultBehavior
 import Game.Grid (Grid)
 import Game.Grid as Grid
-import Graphics.CanvasAction (class CanvasStyle, class MonadCanvasAction, Context2D, clearRect, fillRect, fillRectFull, filled, launchCanvasAff_, setFillStyle)
+import Graphics.CanvasAction
+  ( class CanvasStyle
+  , class MonadCanvasAction
+  , Context2D
+  , clearRect
+  , fillRect
+  , fillRectFull
+  , filled
+  , launchCanvasAff_
+  , setFillStyle
+  )
 import Graphics.CanvasAction as Canvas
 import Graphics.CanvasAction.Path (FillRule(..), arcBy_, fill, moveTo, runPath)
 import Halogen (modify_)
@@ -74,12 +84,12 @@ type Internal m state =
   , lastGrid :: Maybe Grid
   }
 
-requestGridRerender
-  :: forall state m
-   . MonadEffect m
-  => StateId (Internal m state)
-  -> StateId state
-  -> HookM m Unit
+requestGridRerender ::
+  forall state m.
+  MonadEffect m =>
+  StateId (Internal m state) ->
+  StateId state ->
+  HookM m Unit
 requestGridRerender internalId worldId = do
   { renderListener } <- Hooks.get internalId
   withJust renderListener \listener -> do
@@ -89,7 +99,11 @@ requestGridRerender internalId worldId = do
       window
     pure unit
 
-component :: forall s q i o m. MonadEffect m => Config m { paused :: Boolean | s } -> H.Component q i o m
+component ::
+  forall s q i o m.
+  MonadEffect m =>
+  Config m { paused :: Boolean | s } ->
+  H.Component q i o m
 component { title, init, draw, onKey, onMouse, onTick } =
   Hooks.component \_ _ -> Hooks.do
     _ /\ worldId <- Hooks.useState init
@@ -108,7 +122,8 @@ component { title, init, draw, onKey, onMouse, onTick } =
     Hooks.useLifecycleEffect $
       (Canvas.getCanvasElementById canvasId) >>= case _ of
         Nothing ->
-          liftEffect $ throw $ "Critical error: No canvas with id " <> canvasId <> " found"
+          liftEffect $ throw $ "Critical error: No canvas with id " <> canvasId <>
+            " found"
         Just canvas -> do
           context <- Canvas.getContext2D canvas
           Hooks.modify_ internalId \s -> s { context = Just context }
@@ -172,14 +187,14 @@ component { title, init, draw, onKey, onMouse, onTick } =
         window
     pure unit
 
-handleMouse
-  :: forall m state
-   . MonadEffect m
-  => StateId (Internal m state)
-  -> StateId state
-  -> (Boolean -> MouseEventType)
-  -> ME.MouseEvent
-  -> HookM m Unit
+handleMouse ::
+  forall m state.
+  MonadEffect m =>
+  StateId (Internal m state) ->
+  StateId state ->
+  (Boolean -> MouseEventType) ->
+  ME.MouseEvent ->
+  HookM m Unit
 handleMouse internalId worldId getEventType event = do
   { mouseButtonPressed, onMouse } <- Hooks.get internalId
   let eventType = getEventType mouseButtonPressed
@@ -187,30 +202,31 @@ handleMouse internalId worldId getEventType event = do
     Hooks.modify_ internalId \s -> s { mouseButtonPressed = true }
   when (eventType == ButtonUp) $
     Hooks.modify_ internalId \s -> s { mouseButtonPressed = false }
-  defaultBehavior <- evalAction worldId (onMouse (MouseEvent.fromEvent eventType 30 event))
+  defaultBehavior <- evalAction worldId
+    (onMouse (MouseEvent.fromEvent eventType 30 event))
   optionallyPreventDefault defaultBehavior (ME.toEvent event)
   requestGridRerender internalId worldId
 
-handleKey
-  :: forall m state
-   . MonadEffect m
-  => StateId (Internal m state)
-  -> StateId state
-  -> KE.KeyboardEvent
-  -> HookM m Unit
+handleKey ::
+  forall m state.
+  MonadEffect m =>
+  StateId (Internal m state) ->
+  StateId state ->
+  KE.KeyboardEvent ->
+  HookM m Unit
 handleKey internalId worldId event = do
   { onKey } <- Hooks.get internalId
   defaultBehavior <- evalAction worldId $ onKey (KeypressEvent.fromEvent event)
   optionallyPreventDefault defaultBehavior (KE.toEvent event)
   requestGridRerender internalId worldId
 
-handleTick
-  :: forall m state
-   . MonadEffect m
-  => StateId (Internal m { paused :: Boolean | state })
-  -> StateId { paused :: Boolean | state }
-  -> Listener (HookM m Unit)
-  -> Effect Unit
+handleTick ::
+  forall m state.
+  MonadEffect m =>
+  StateId (Internal m { paused :: Boolean | state }) ->
+  StateId { paused :: Boolean | state } ->
+  Listener (HookM m Unit) ->
+  Effect Unit
 handleTick internalId worldId listener =
   notify listener do
     { onTick, lastTick } <- Hooks.get internalId
@@ -227,13 +243,13 @@ handleTick internalId worldId listener =
         window
     pure unit
 
-renderGrid
-  :: forall m state
-   . MonadEffect m
-  => StateId (Internal m state)
-  -> StateId state
-  -> Listener (HookM m Unit)
-  -> Effect Unit
+renderGrid ::
+  forall m state.
+  MonadEffect m =>
+  StateId (Internal m state) ->
+  StateId state ->
+  Listener (HookM m Unit) ->
+  Effect Unit
 renderGrid internalId worldId listener = do
   notify listener do
     { draw, context, lastGrid } <- Hooks.get internalId
@@ -245,7 +261,7 @@ renderGrid internalId worldId listener = do
           let
             currentValue = Grid.index grid x y
             lastValue = map (\g -> Grid.index g x y) lastGrid
-          when (Just (currentValue) /= lastValue) $ do
+          when (Just currentValue /= lastValue) $ do
             case cell of
               Grid.Empty -> liftEffect $ launchCanvasAff_ ctx do
                 clearRect
@@ -265,15 +281,15 @@ renderGrid internalId worldId listener = do
                   10.0
             Hooks.modify_ internalId \s -> s { lastGrid = Just grid }
 
-drawRoundedRectangle
-  :: forall region m color
-   . MonadCanvasAction m
-  => ToRegion Number region
-  => CanvasStyle color
-  => region
-  -> color
-  -> Number
-  -> m Unit
+drawRoundedRectangle ::
+  forall region m color.
+  MonadCanvasAction m =>
+  ToRegion Number region =>
+  CanvasStyle color =>
+  region ->
+  color ->
+  Number ->
+  m Unit
 drawRoundedRectangle region color radius = do
   path <- runPath roundedRectPath
   filled color (fill Nonzero path)

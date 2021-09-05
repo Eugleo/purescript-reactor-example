@@ -24,4 +24,5 @@ index grid x y = do
   pure cell
 
 set :: Grid -> Int -> Int -> Cell -> Grid
-set grid x y cell = modifyAtIndices [ x ] (\col -> modifyAtIndices [ y ] (const cell) col) grid
+set grid x y cell =
+  modifyAtIndices [ x ] (\col -> modifyAtIndices [ y ] (const cell) col) grid
