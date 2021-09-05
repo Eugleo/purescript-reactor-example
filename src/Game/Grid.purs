@@ -9,6 +9,8 @@ data Cell
   = Empty
   | Filled Color
 
+derive instance eqcell :: Eq Cell
+
 type Grid
   = Array (Array Cell)
 

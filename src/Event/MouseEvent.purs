@@ -1,9 +1,10 @@
-module Game.MouseEvent where
+module Event.MouseEvent where
 
 import Prelude
 
 import Data.Generic.Rep (class Generic)
 import Data.Show.Generic (genericShow)
+import Effect (Effect)
 import Web.UIEvent.MouseEvent as ME
 
 data MouseEventType = ButtonUp | ButtonDown | Drag | Enter | Leave | Move

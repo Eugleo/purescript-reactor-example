@@ -1,15 +1,18 @@
 module Game.Config where
 
-import Data.Maybe (Maybe)
+import Data.Unit (Unit)
+import Event.KeypressEvent (KeypressEvent)
+import Event.MouseEvent (MouseEvent)
+import Event.TickEvent (TickEvent)
+import Game.Action (Action)
+import Game.DefaultBehavior (DefaultBehavior)
 import Game.Grid (Grid)
-import Game.KeyEvent (KeyEvent)
-import Game.MouseEvent (MouseEvent)
 
-type Config s =
+type Config m state =
   { title :: String
-  , init :: s
-  , draw :: s -> Grid
-  , onTick :: Maybe (s -> s)
-  , onKey :: Maybe (s -> KeyEvent -> s)
-  , onMouse :: Maybe (s -> MouseEvent -> s)
+  , init :: state
+  , draw :: state -> Grid
+  , onTick :: TickEvent -> Action m state Unit
+  , onKey :: KeypressEvent -> Action m state DefaultBehavior
+  , onMouse :: MouseEvent -> Action m state DefaultBehavior
   }
