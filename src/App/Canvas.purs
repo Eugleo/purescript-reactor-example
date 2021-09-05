@@ -12,7 +12,6 @@ import Data.Vector.Polymorphic (Rect(..), (><))
 import Data.Vector.Polymorphic.Class (class ToRegion, toRegion)
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
-import Effect.Class.Console (log)
 import Effect.Exception (throw)
 import Event.KeypressEvent (KeypressEvent)
 import Event.KeypressEvent (fromEvent) as KeypressEvent
@@ -20,11 +19,9 @@ import Event.MouseEvent (MouseEvent, MouseEventType(..))
 import Event.MouseEvent (fromEvent) as MouseEvent
 import Event.TickEvent (TickEvent(..))
 import Event.TickEvent as TickEvent
-import Game.Action (Action, evalAction, get)
-import Game.Color (gray100)
+import Game.Action (Action, evalAction)
 import Game.Config (Config)
 import Game.DefaultBehavior (DefaultBehavior, optionallyPreventDefault)
-import Game.DefaultBehavior as DefaultBehavior
 import Game.Grid (Grid)
 import Game.Grid as Grid
 import Graphics.CanvasAction
@@ -32,26 +29,18 @@ import Graphics.CanvasAction
   , class MonadCanvasAction
   , Context2D
   , clearRect
-  , fillRect
-  , fillRectFull
   , filled
   , launchCanvasAff_
-  , setFillStyle
   )
 import Graphics.CanvasAction as Canvas
 import Graphics.CanvasAction.Path (FillRule(..), arcBy_, fill, moveTo, runPath)
-import Halogen (modify_)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
 import Halogen.Hooks (HookM, StateId)
 import Halogen.Hooks as Hooks
 import Halogen.Query.Event (eventListener)
-import Halogen.Subscription (Listener, create, notify, subscribe)
-import Web.DOM.Document (doctype)
-import Web.Event.Event (preventDefault)
-import Web.Event.Event as E
-import Web.HTML (Window)
+import Halogen.Subscription (Listener, create, notify)
 import Web.HTML (window) as Web
 import Web.HTML.HTMLCanvasElement as HTMLCanvasElement
 import Web.HTML.HTMLDocument as HTMLDocument
