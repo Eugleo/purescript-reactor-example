@@ -35,18 +35,20 @@ type State =
 config :: forall m. Config m State
 config =
   { title: "Moving Dot"
+  , width: 20
+  , height: 30
   , init: { x: 0.0, y: 0.0, velocity: { x: 0.0, y: 0.0 }, cursor: Nothing, paused: false }
-  , onMouse: onMouse
-  , onKey: onKey
-  , onTick: onTick
-  , draw: \s@{ cursor } -> do
-      fill blue400 $ cell $ { x: s.x, y: s.y } `wrt` canvas
-      withJust cursor
-        $ fill gray200 <<< cell <<< (_ `wrt` grid)
-  , width: 36
-  , height: 24
+  , onMouse
+  , onKey
+  , onTick
+  , draw
   }
   where
+  draw s@{ cursor } = do
+    fill blue400 $ cell $ { x: s.x, y: s.y } `wrt` canvas
+    withJust cursor
+      $ fill blue400 <<< cell <<< (_ `wrt` grid)
+
   onMouse (MouseEvent { x, y }) = do
     modify_ \s -> s { cursor = Just { x, y } }
     preventDefaultBehavior

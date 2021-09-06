@@ -12,12 +12,11 @@ import Data.Vector.Polymorphic (Rect(..), (><))
 import Data.Vector.Polymorphic.Class (class ToRegion, toRegion)
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
-import Effect.Class.Console (log, logShow)
 import Effect.Exception (throw)
 import Event.DefaultBehavior (DefaultBehavior, optionallyPreventDefault)
 import Event.KeypressEvent (KeypressEvent)
 import Event.KeypressEvent (fromEvent) as KeypressEvent
-import Event.MouseEvent (MouseEvent(..), MouseEventType(..))
+import Event.MouseEvent (MouseEvent, MouseEventType(..))
 import Event.MouseEvent (fromEvent) as MouseEvent
 import Event.TickEvent (TickEvent(..))
 import Event.TickEvent as TickEvent
@@ -94,7 +93,7 @@ component ::
 component { title, init, draw, onKey, onMouse, onTick, width, height } =
   Hooks.component \_ _ -> Hooks.do
     _ /\ worldId <- Hooks.useState init
-    _ /\ internalId <- Hooks.useState
+    { cellSize } /\ internalId <- Hooks.useState
       { context: Nothing
       , renderListener: Nothing
       , mouseButtonPressed: false
@@ -135,8 +134,8 @@ component { title, init, draw, onKey, onMouse, onTick, width, height } =
             [ HP.classes
                 [ H.ClassName "rounded-lg bg-gray-100" ]
             , HP.id_ canvasId
-            , HP.width 1080
-            , HP.height 720
+            , HP.width $ width * cellSize
+            , HP.height $ height * cellSize
             ]
         ]
   where
@@ -264,13 +263,13 @@ renderGrid internalId worldId listener = do
           }
       Grid.Colored style -> liftEffect $ launchCanvasAff_ context do
         drawRoundedRectangle
-          { height: toNumber size
-          , width: toNumber size
-          , x: toNumber (x * size)
-          , y: toNumber (y * size)
+          { height: toNumber size - 2.0
+          , width: toNumber size - 2.0
+          , x: toNumber (x * size) + 1.0
+          , y: toNumber (y * size) + 1.0
           }
           style
-          10.0
+          7.0
 
 drawRoundedRectangle ::
   forall region m color.
