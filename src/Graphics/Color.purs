@@ -1,4 +1,4 @@
-module Game.Color where
+module Graphics.Color where
 
 import Prelude
 import Color (Color, fromHexString)

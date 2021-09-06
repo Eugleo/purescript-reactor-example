@@ -9,17 +9,12 @@ import Effect (Effect)
 import Event.KeypressEvent (KeypressEvent(..))
 import Event.MouseEvent (MouseEvent(..))
 import Event.TickEvent (TickEvent(..))
-import Game.Action
-  ( executeDefaultBehavior
-  , get
-  , modify_
-  , preventDefaultBehavior
-  , triggerPause
-  )
-import Game.Color (blue400, gray200)
+import Game.Action (executeDefaultBehavior, get, modify_, preventDefaultBehavior, triggerPause)
+import Graphics.Color (blue400, gray200)
 import Game.Config (Config)
-import Game.Grid (canvas, grid, wrt)
-import Game.Grid as Grid
+import Graphics.CoordinateSystem (canvas, grid, wrt)
+import Graphics.Drawing (fill)
+import Graphics.Shape (cell)
 import Halogen.Aff as HA
 import Halogen.VDom.Driver (runUI)
 
@@ -45,9 +40,9 @@ config =
   , onKey: onKey
   , onTick: onTick
   , draw: \s@{ cursor } -> do
-      Grid.fill blue400 $ Grid.cell $ { x: s.x, y: s.y } `wrt` canvas
-      withJust cursor \c ->
-        Grid.fill gray200 $ Grid.cell $ c `wrt` grid
+      fill blue400 $ cell $ { x: s.x, y: s.y } `wrt` canvas
+      withJust cursor
+        $ fill gray200 <<< cell <<< (_ `wrt` grid)
   , width: 36
   , height: 24
   }

@@ -1,12 +1,12 @@
 module Game.Config where
 
 import Data.Unit (Unit)
+import Event.DefaultBehavior (DefaultBehavior)
 import Event.KeypressEvent (KeypressEvent)
 import Event.MouseEvent (MouseEvent)
 import Event.TickEvent (TickEvent)
 import Game.Action (Action)
-import Game.DefaultBehavior (DefaultBehavior)
-import Game.Grid (Drawing, Grid)
+import Graphics.Drawing (Drawing)
 
 type Config m state =
   { title :: String

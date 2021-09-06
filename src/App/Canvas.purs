@@ -14,6 +14,7 @@ import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Class.Console (log, logShow)
 import Effect.Exception (throw)
+import Event.DefaultBehavior (DefaultBehavior, optionallyPreventDefault)
 import Event.KeypressEvent (KeypressEvent)
 import Event.KeypressEvent (fromEvent) as KeypressEvent
 import Event.MouseEvent (MouseEvent(..), MouseEventType(..))
@@ -22,12 +23,12 @@ import Event.TickEvent (TickEvent(..))
 import Event.TickEvent as TickEvent
 import Game.Action (Action, evalAction)
 import Game.Config (Config)
-import Game.DefaultBehavior (DefaultBehavior, optionallyPreventDefault)
-import Game.Grid (Grid, Drawing, differencesFrom, renderDrawing)
-import Game.Grid as Grid
 import Graphics.CanvasAction (class CanvasStyle, class MonadCanvasAction, Context2D, clearRect, filled, launchCanvasAff_)
 import Graphics.CanvasAction as Canvas
 import Graphics.CanvasAction.Path (FillRule(..), arcBy_, fill, moveTo, runPath)
+import Graphics.Drawing (Drawing, renderDrawing)
+import Graphics.Grid (Cell, Grid, differencesFrom)
+import Graphics.Grid as Grid
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
@@ -64,7 +65,7 @@ type Internal m state =
   , onMouse :: MouseEvent -> Action m state DefaultBehavior
   , renderListener :: Maybe (Listener (HookM m Unit))
   , lastTick :: Number
-  , lastGrid :: Maybe Grid
+  , lastGrid :: Maybe (Grid Cell)
   , width :: Int
   , height :: Int
   , cellSize :: Int
@@ -261,7 +262,7 @@ renderGrid internalId worldId listener = do
           , x: toNumber (x * size)
           , y: toNumber (y * size)
           }
-      Grid.Styled style -> liftEffect $ launchCanvasAff_ context do
+      Grid.Colored style -> liftEffect $ launchCanvasAff_ context do
         drawRoundedRectangle
           { height: toNumber size
           , width: toNumber size

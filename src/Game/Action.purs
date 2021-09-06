@@ -6,7 +6,7 @@ import Control.Monad.Rec.Class (class MonadRec, Step(..), tailRecM)
 import Control.Monad.Trans.Class (lift)
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Random (randomInt)
-import Game.DefaultBehavior (DefaultBehavior(..))
+import Event.DefaultBehavior (DefaultBehavior(..))
 import Halogen.Hooks (HookM, StateId)
 import Halogen.Hooks as Hooks
 

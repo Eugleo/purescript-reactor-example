@@ -1,7 +1,6 @@
-module Game.DefaultBehavior where
+module Event.DefaultBehavior (optionallyPreventDefault, DefaultBehavior(..)) where
 
 import Prelude
-
 import Effect.Class (class MonadEffect, liftEffect)
 import Halogen.Hooks (HookM)
 import Web.Event.Event (Event, preventDefault)
