@@ -2,27 +2,28 @@ module Main where
 
 import Prelude
 
-import App.Canvas (withJust)
-import App.Canvas as Canvas
+import App.ReactorPage as ReactorPage
+import Data.Int (toNumber)
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Event.KeypressEvent (KeypressEvent(..))
 import Event.MouseEvent (MouseEvent(..))
 import Event.TickEvent (TickEvent(..))
-import Game.Action (executeDefaultBehavior, get, modify_, preventDefaultBehavior, triggerPause)
-import Graphics.Color (blue400, gray200)
+import Game.Action (executeDefaultBehavior, get, modify_, preventDefaultBehavior, triggerPause, utilities)
 import Game.Config (Config)
+import Graphics.Color (blue400, gray200)
 import Graphics.CoordinateSystem (canvas, grid, wrt)
 import Graphics.Drawing (fill)
 import Graphics.Shape (cell)
 import Halogen.Aff as HA
 import Halogen.VDom.Driver (runUI)
+import Utilities (withJust)
 
 main :: Effect Unit
 main =
   HA.runHalogenAff do
     body <- HA.awaitBody
-    runUI (Canvas.component config) unit body
+    runUI (ReactorPage.component config) unit body
 
 type State =
   { x :: Number
@@ -36,7 +37,7 @@ config :: forall m. Config m State
 config =
   { title: "Moving Dot"
   , width: 20
-  , height: 30
+  , height: 20
   , init: { x: 0.0, y: 0.0, velocity: { x: 0.0, y: 0.0 }, cursor: Nothing, paused: false }
   , onMouse
   , onKey
@@ -47,25 +48,27 @@ config =
   draw s@{ cursor } = do
     fill blue400 $ cell $ { x: s.x, y: s.y } `wrt` canvas
     withJust cursor
-      $ fill blue400 <<< cell <<< (_ `wrt` grid)
+      $ fill gray200 <<< cell <<< (_ `wrt` grid)
 
   onMouse (MouseEvent { x, y }) = do
     modify_ \s -> s { cursor = Just { x, y } }
     preventDefaultBehavior
 
   onKey (KeypressEvent key _) = do
+    { cellSize } <- utilities
+    let perSec = ((toNumber cellSize) * _)
     case key of
       "ArrowLeft" -> do
-        modify_ \s -> s { velocity = { x: cellsPerSec (-3.0), y: 0.0 } }
+        modify_ \s -> s { velocity = { x: perSec (-3.0), y: 0.0 } }
         preventDefaultBehavior
       "ArrowRight" -> do
-        modify_ \s -> s { velocity = { x: cellsPerSec 3.0, y: 0.0 } }
+        modify_ \s -> s { velocity = { x: perSec 3.0, y: 0.0 } }
         preventDefaultBehavior
       "ArrowDown" -> do
-        modify_ \s -> s { velocity = { x: 0.0, y: cellsPerSec 3.0 } }
+        modify_ \s -> s { velocity = { x: 0.0, y: perSec 3.0 } }
         preventDefaultBehavior
       "ArrowUp" -> do
-        modify_ \s -> s { velocity = { x: 0.0, y: cellsPerSec (-3.0) } }
+        modify_ \s -> s { velocity = { x: 0.0, y: perSec (-3.0) } }
         preventDefaultBehavior
       " " -> do
         triggerPause
@@ -74,10 +77,10 @@ config =
 
   onTick (TickEvent { delta }) = do
     { velocity, x, y } <- get
-    modify_ \s -> s
-      { x = bound (x + velocity.x * delta) 1080.0
-      , y = bound (y + velocity.y * delta) 720.0
-      }
-
-  cellsPerSec = (_ * 30.0)
-  bound n b = max (min n b) 0.0
+    { bound } <- utilities
+    modify_ \s ->
+      let
+        { x, y } =
+          bound $ { x: x + velocity.x * delta, y: y + velocity.y * delta } `wrt` canvas
+      in
+        s { x = x, y = y }

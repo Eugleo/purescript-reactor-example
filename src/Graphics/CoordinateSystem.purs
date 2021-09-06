@@ -3,6 +3,7 @@ module Graphics.CoordinateSystem
   , wrt
   , canvas
   , grid
+  , grid'
   , relativeToGrid
   ) where
 
@@ -22,6 +23,9 @@ canvas = RelativeToCanvas
 
 grid :: forall a b. HMap (Int -> Number) a b => a -> CoordinateSystem b
 grid = RelativeToGrid <<< hmap (\n -> toNumber n)
+
+grid' :: forall a. a -> CoordinateSystem a
+grid' = RelativeToGrid
 
 relativeToGrid ::
   forall a b.
