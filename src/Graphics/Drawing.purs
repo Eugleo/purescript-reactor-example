@@ -1,4 +1,11 @@
-module Graphics.Drawing (Drawing, DrawingM, fill, renderDrawing) where
+module Graphics.Drawing
+  ( Drawing
+  , DrawingM
+  , fill
+  , renderDrawing
+  , mapOver
+  , mapOverWithIndex
+  ) where
 
 import Prelude
 
@@ -8,9 +15,13 @@ import Control.Monad.Rec.Class (class MonadRec, Step(..), tailRecM)
 import Control.Monad.ST (ST, for)
 import Data.Array (replicate)
 import Data.Array.ST (STArray, new, poke, pushAll, run)
-import Graphics.Grid (Cell(..), Grid(..))
-import Graphics.CoordinateSystem (relativeToGrid)
-import Graphics.Shape (Shape(..))
+import Data.Foldable (for_)
+import Data.Maybe (Maybe)
+import Data.Tuple.Nested ((/\))
+import Graphics.CoordinateSystem (grid, relativeToGrid, wrt)
+import Graphics.Grid (Cell(..), Grid(..), enumerate)
+import Graphics.Shape (Shape(..), cell)
+import Utilities (withJust)
 
 data DrawingF a
   = Filled Color Shape a
@@ -37,6 +48,22 @@ type Drawing = DrawingM Unit
 
 fill :: Color -> Shape -> Drawing
 fill color shape = DrawingM $ liftF $ Filled color shape unit
+
+mapOver :: forall a. Grid a -> (a -> Maybe Color) -> Drawing
+mapOver g f =
+  for_ (enumerate g) $ \(point /\ x) ->
+    withJust (f x) \color ->
+      fill color $ cell $ point `wrt` grid
+
+mapOverWithIndex ::
+  forall a.
+  Grid a ->
+  ({ x :: Int, y :: Int } -> a -> Maybe Color) ->
+  Drawing
+mapOverWithIndex g f =
+  for_ (enumerate g) $ \(point /\ x) ->
+    withJust (f point x) \color ->
+      fill color $ cell $ point `wrt` grid
 
 renderDrawing :: Number -> { width :: Int, height :: Int } -> Drawing -> Grid Cell
 renderDrawing cellSize g (DrawingM drawing) = Grid array g

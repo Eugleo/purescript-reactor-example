@@ -2,6 +2,7 @@ module Graphics.Grid
   ( Grid(..)
   , Cell(..)
   , enumerate
+  , mapWithIndex
   , differencesFrom
   , updateAt
   , modifyAt
@@ -16,7 +17,7 @@ import Color (Color)
 import Data.Array ((..))
 import Data.Array as Array
 import Data.Maybe (Maybe)
-import Data.Tuple (Tuple(..))
+import Data.Tuple (Tuple(..), uncurry)
 import Data.Tuple.Nested ((/\))
 
 data Grid a = Grid (Array a) { width :: Int, height :: Int }
@@ -26,6 +27,9 @@ instance Functor Grid where
 
 data Cell = Colored Color | EmptyCell
 derive instance eqCell :: Eq Cell
+
+mapWithIndex :: forall a b. Grid a -> ({ x :: Int, y :: Int } -> a -> b) -> Grid b
+mapWithIndex g@(Grid _ cfg) f = Grid (map (uncurry f) $ enumerate g) cfg
 
 enumerate :: forall a. Grid a -> Array (Tuple { x :: Int, y :: Int } a)
 enumerate (Grid xs { width }) = enumerate2D width xs
