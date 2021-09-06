@@ -160,3 +160,33 @@ yellow800 = fromHex "#92400E"
 
 yellow900 :: Color
 yellow900 = fromHex "#78350F"
+
+pink50 :: Color
+pink50 = fromHex "#FDF2F8"
+
+pink100 :: Color
+pink100 = fromHex "#FCE7F3"
+
+pink200 :: Color
+pink200 = fromHex "#FBCFE8"
+
+pink300 :: Color
+pink300 = fromHex "#F9A8D4"
+
+pink400 :: Color
+pink400 = fromHex "#F472B6"
+
+pink500 :: Color
+pink500 = fromHex "#EC4899"
+
+pink600 :: Color
+pink600 = fromHex "#DB2777"
+
+pink700 :: Color
+pink700 = fromHex "#BE185D"
+
+pink800 :: Color
+pink800 = fromHex "#9D174D"
+
+pink900 :: Color
+pink900 = fromHex "#831843"
