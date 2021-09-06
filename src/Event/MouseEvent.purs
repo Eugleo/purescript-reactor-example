@@ -1,6 +1,7 @@
 module Event.MouseEvent where
 
 import Prelude
+
 import Data.Generic.Rep (class Generic)
 import Data.Show.Generic (genericShow)
 import Web.UIEvent.MouseEvent as ME
@@ -18,17 +19,20 @@ derive instance genericMouseEventType :: Generic MouseEventType _
 instance showMyADT :: Show MouseEventType where
   show = genericShow
 
-data MouseEvent
-  = MouseEvent
-    { type :: MouseEventType
-    , x :: Int
-    , y :: Int
-    , control :: Boolean
-    , meta :: Boolean
-    , alt :: Boolean
-    , shift :: Boolean
-    , button :: Int
-    }
+data MouseEvent = MouseEvent
+  { type :: MouseEventType
+  , x :: Int
+  , y :: Int
+  , control :: Boolean
+  , meta :: Boolean
+  , alt :: Boolean
+  , shift :: Boolean
+  , button :: Int
+  }
+
+derive instance genericMouseEvent :: Generic MouseEvent _
+instance showMouseEvent :: Show MouseEvent where
+  show = genericShow
 
 foreign import offsetX :: ME.MouseEvent -> Int
 

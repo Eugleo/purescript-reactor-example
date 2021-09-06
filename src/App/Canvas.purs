@@ -6,32 +6,26 @@ import Data.Array (length, zip, (..))
 import Data.Foldable (for_)
 import Data.Int (toNumber)
 import Data.Maybe (Maybe(..))
-import Data.Tuple (Tuple)
+import Data.Tuple (Tuple(..))
 import Data.Tuple.Nested ((/\))
 import Data.Vector.Polymorphic (Rect(..), (><))
 import Data.Vector.Polymorphic.Class (class ToRegion, toRegion)
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
+import Effect.Class.Console (log, logShow)
 import Effect.Exception (throw)
 import Event.KeypressEvent (KeypressEvent)
 import Event.KeypressEvent (fromEvent) as KeypressEvent
-import Event.MouseEvent (MouseEvent, MouseEventType(..))
+import Event.MouseEvent (MouseEvent(..), MouseEventType(..))
 import Event.MouseEvent (fromEvent) as MouseEvent
 import Event.TickEvent (TickEvent(..))
 import Event.TickEvent as TickEvent
 import Game.Action (Action, evalAction)
 import Game.Config (Config)
 import Game.DefaultBehavior (DefaultBehavior, optionallyPreventDefault)
-import Game.Grid (Grid)
+import Game.Grid (Grid, Drawing, differencesFrom, renderDrawing)
 import Game.Grid as Grid
-import Graphics.CanvasAction
-  ( class CanvasStyle
-  , class MonadCanvasAction
-  , Context2D
-  , clearRect
-  , filled
-  , launchCanvasAff_
-  )
+import Graphics.CanvasAction (class CanvasStyle, class MonadCanvasAction, Context2D, clearRect, filled, launchCanvasAff_)
 import Graphics.CanvasAction as Canvas
 import Graphics.CanvasAction.Path (FillRule(..), arcBy_, fill, moveTo, runPath)
 import Halogen as H
@@ -64,13 +58,16 @@ withJust Nothing _ = pure unit
 type Internal m state =
   { context :: Maybe Context2D
   , mouseButtonPressed :: Boolean
-  , draw :: state -> Grid
+  , draw :: state -> Drawing
   , onTick :: TickEvent -> Action m state Unit
   , onKey :: KeypressEvent -> Action m state DefaultBehavior
   , onMouse :: MouseEvent -> Action m state DefaultBehavior
   , renderListener :: Maybe (Listener (HookM m Unit))
   , lastTick :: Number
   , lastGrid :: Maybe Grid
+  , width :: Int
+  , height :: Int
+  , cellSize :: Int
   }
 
 requestGridRerender ::
@@ -93,7 +90,7 @@ component ::
   MonadEffect m =>
   Config m { paused :: Boolean | s } ->
   H.Component q i o m
-component { title, init, draw, onKey, onMouse, onTick } =
+component { title, init, draw, onKey, onMouse, onTick, width, height } =
   Hooks.component \_ _ -> Hooks.do
     _ /\ worldId <- Hooks.useState init
     _ /\ internalId <- Hooks.useState
@@ -106,6 +103,9 @@ component { title, init, draw, onKey, onMouse, onTick } =
       , onTick
       , lastTick: 0.0
       , lastGrid: Nothing
+      , width
+      , height
+      , cellSize: 30
       }
 
     Hooks.useLifecycleEffect $
@@ -209,6 +209,7 @@ handleKey internalId worldId event = do
   optionallyPreventDefault defaultBehavior (KE.toEvent event)
   requestGridRerender internalId worldId
 
+-- TODO Optimize, do not call when paused
 handleTick ::
   forall m state.
   MonadEffect m =>
@@ -241,34 +242,34 @@ renderGrid ::
   Effect Unit
 renderGrid internalId worldId listener = do
   notify listener do
-    { draw, context, lastGrid } <- Hooks.get internalId
+    { draw, context, lastGrid, width, height, cellSize } <- Hooks.get internalId
     withJust context \ctx -> do
       world <- Hooks.get worldId
-      let grid = draw world
-      for_ (enumerate grid) \(x /\ col) ->
-        for_ (enumerate col) \(y /\ cell) -> do
-          let
-            currentValue = Grid.index grid x y
-            lastValue = map (\g -> Grid.index g x y) lastGrid
-          when (Just currentValue /= lastValue) $ do
-            case cell of
-              Grid.Empty -> liftEffect $ launchCanvasAff_ ctx do
-                clearRect
-                  { height: 30.0
-                  , width: 30.0
-                  , x: toNumber (x * 30)
-                  , y: toNumber (y * 30)
-                  }
-              Grid.Filled color -> liftEffect $ launchCanvasAff_ ctx do
-                drawRoundedRectangle
-                  { height: 30.0
-                  , width: 30.0
-                  , x: toNumber (x * 30)
-                  , y: toNumber (y * 30)
-                  }
-                  color
-                  10.0
-            Hooks.modify_ internalId \s -> s { lastGrid = Just grid }
+      let grid = renderDrawing (toNumber cellSize) { width, height } $ draw world
+      case lastGrid of
+        Nothing -> for_ (Grid.enumerate grid) $ renderCell ctx cellSize
+        Just reference ->
+          for_ (grid `differencesFrom` reference) $ renderCell ctx cellSize
+      Hooks.modify_ internalId \s -> s { lastGrid = Just grid }
+  where
+  renderCell context size (Tuple { x, y } cell) =
+    case cell of
+      Grid.EmptyCell -> liftEffect $ launchCanvasAff_ context do
+        clearRect
+          { height: toNumber size
+          , width: toNumber size
+          , x: toNumber (x * size)
+          , y: toNumber (y * size)
+          }
+      Grid.Styled style -> liftEffect $ launchCanvasAff_ context do
+        drawRoundedRectangle
+          { height: toNumber size
+          , width: toNumber size
+          , x: toNumber (x * size)
+          , y: toNumber (y * size)
+          }
+          style
+          10.0
 
 drawRoundedRectangle ::
   forall region m color.

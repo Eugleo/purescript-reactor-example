@@ -23,6 +23,7 @@ to generate this file without the comments in this block.
   , "halogen"
   , "halogen-hooks"
   , "halogen-subscriptions"
+  , "heterogeneous"
   , "integers"
   , "maybe"
   , "partial"

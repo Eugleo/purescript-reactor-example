@@ -2,16 +2,23 @@ module Main where
 
 import Prelude
 
+import App.Canvas (withJust)
 import App.Canvas as Canvas
-import Data.Int (floor)
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Event.KeypressEvent (KeypressEvent(..))
 import Event.MouseEvent (MouseEvent(..))
 import Event.TickEvent (TickEvent(..))
-import Game.Action (get, modify_, pause, executeDefaultBehavior, preventDefaultBehavior, triggerPause)
+import Game.Action
+  ( executeDefaultBehavior
+  , get
+  , modify_
+  , preventDefaultBehavior
+  , triggerPause
+  )
 import Game.Color (blue400, gray200)
 import Game.Config (Config)
+import Game.Grid (canvas, grid, wrt)
 import Game.Grid as Grid
 import Halogen.Aff as HA
 import Halogen.VDom.Driver (runUI)
@@ -22,8 +29,7 @@ main =
     body <- HA.awaitBody
     runUI (Canvas.component config) unit body
 
-type State
-  =
+type State =
   { x :: Number
   , y :: Number
   , velocity :: { x :: Number, y :: Number }
@@ -38,14 +44,12 @@ config =
   , onMouse: onMouse
   , onKey: onKey
   , onTick: onTick
-  , draw: \s@{ cursor } ->
-      let
-        { x, y } = snap s 30.0
-        base = (Grid.set (Grid.empty 36 24) x y (Grid.Filled blue400))
-      in
-        case cursor of
-          Nothing -> base
-          Just c -> Grid.set base c.x c.y (Grid.Filled gray200)
+  , draw: \s@{ cursor } -> do
+      Grid.fill blue400 $ Grid.cell $ { x: s.x, y: s.y } `wrt` canvas
+      withJust cursor \c ->
+        Grid.fill gray200 $ Grid.cell $ c `wrt` grid
+  , width: 36
+  , height: 24
   }
   where
   onMouse (MouseEvent { x, y }) = do
@@ -79,5 +83,4 @@ config =
       }
 
   cellsPerSec = (_ * 30.0)
-  snap { x, y } size = { x: floor (x / size), y: floor (y / size) }
   bound n b = max (min n b) 0.0
