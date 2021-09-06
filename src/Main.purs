@@ -9,8 +9,8 @@ import Effect (Effect)
 import Event.KeypressEvent (KeypressEvent(..))
 import Event.MouseEvent (MouseEvent(..))
 import Event.TickEvent (TickEvent(..))
-import Game.Action (executeDefaultBehavior, get, modify_, preventDefaultBehavior, triggerPause, utilities)
-import Game.Config (Config)
+import Reactor.Action (executeDefaultBehavior, get, modify_, preventDefaultBehavior, triggerPause, utilities)
+import Reactor (Reactor)
 import Graphics.Color (blue400, gray200)
 import Graphics.CoordinateSystem (canvas, grid, wrt)
 import Graphics.Drawing (fill)
@@ -23,9 +23,9 @@ main :: Effect Unit
 main =
   HA.runHalogenAff do
     body <- HA.awaitBody
-    runUI (ReactorPage.component config) unit body
+    runUI (ReactorPage.component world) unit body
 
-type State =
+type World =
   { x :: Number
   , y :: Number
   , velocity :: { x :: Number, y :: Number }
@@ -33,18 +33,12 @@ type State =
   , paused :: Boolean
   }
 
-config :: forall m. Config m State
-config =
-  { title: "Moving Dot"
-  , width: 20
-  , height: 20
-  , init: { x: 0.0, y: 0.0, velocity: { x: 0.0, y: 0.0 }, cursor: Nothing, paused: false }
-  , onMouse
-  , onKey
-  , onTick
-  , draw
-  }
+world :: forall m. Reactor m World
+world =
+  { title: "Moving Dot", width: 20, height: 20, init, onMouse, onKey, onTick, draw }
   where
+  init = { x: 0.0, y: 0.0, velocity: { x: 0.0, y: 0.0 }, cursor: Nothing, paused: false }
+
   draw s@{ cursor } = do
     fill blue400 $ cell $ { x: s.x, y: s.y } `wrt` canvas
     withJust cursor
@@ -59,16 +53,16 @@ config =
     let perSec = ((toNumber cellSize) * _)
     case key of
       "ArrowLeft" -> do
-        modify_ \s -> s { velocity = { x: perSec (-3.0), y: 0.0 } }
+        modify_ \s -> s { velocity = { x: perSec (-6.0), y: 0.0 } }
         preventDefaultBehavior
       "ArrowRight" -> do
-        modify_ \s -> s { velocity = { x: perSec 3.0, y: 0.0 } }
+        modify_ \s -> s { velocity = { x: perSec 6.0, y: 0.0 } }
         preventDefaultBehavior
       "ArrowDown" -> do
-        modify_ \s -> s { velocity = { x: 0.0, y: perSec 3.0 } }
+        modify_ \s -> s { velocity = { x: 0.0, y: perSec 6.0 } }
         preventDefaultBehavior
       "ArrowUp" -> do
-        modify_ \s -> s { velocity = { x: 0.0, y: perSec (-3.0) } }
+        modify_ \s -> s { velocity = { x: 0.0, y: perSec (-6.0) } }
         preventDefaultBehavior
       " " -> do
         triggerPause

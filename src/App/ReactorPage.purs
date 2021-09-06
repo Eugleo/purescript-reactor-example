@@ -2,8 +2,8 @@ module App.ReactorPage (component) where
 
 import Prelude
 
-import App.Reactor.Properties (Properties) as Reactor
-import App.Reactor.State (State) as Reactor
+import Reactor.Properties (Properties) as Reactor
+import Reactor.State (State) as Reactor
 import Data.Foldable (for_)
 import Data.Int (toNumber)
 import Data.Maybe (Maybe(..))
@@ -20,8 +20,8 @@ import Event.MouseEvent (MouseEventType(..))
 import Event.MouseEvent (fromEvent) as MouseEvent
 import Event.TickEvent (TickEvent(..))
 import Event.TickEvent as TickEvent
-import Game.Action (evalAction)
-import Game.Config (Config)
+import Reactor.Action (evalAction)
+import Reactor (Reactor)
 import Graphics.CanvasAction (class CanvasStyle, class MonadCanvasAction, clearRect, filled, launchCanvasAff_)
 import Graphics.CanvasAction as Canvas
 import Graphics.CanvasAction.Path (FillRule(..), arcBy_, fill, moveTo, runPath)
@@ -51,25 +51,10 @@ canvasId = "canvas"
 type State m world = StateId (Reactor.State m world)
 type Props m world = StateId (Reactor.Properties m world)
 
-requestGridRerender ::
-  forall m world.
-  MonadEffect m =>
-  State m world ->
-  Props m world ->
-  HookM m Unit
-requestGridRerender stateId propsId = do
-  { renderListener } <- Hooks.get stateId
-  withJust renderListener \listener -> do
-    window <- liftEffect Web.window
-    _ <- liftEffect $ Web.requestAnimationFrame
-      (renderGrid stateId propsId listener)
-      window
-    pure unit
-
 component ::
   forall world q i o m.
   MonadEffect m =>
-  Config m { paused :: Boolean | world } ->
+  Reactor m { paused :: Boolean | world } ->
   H.Component q i o m
 component { title, init, draw, onKey, onMouse, onTick, width, height } =
   Hooks.component \_ _ -> Hooks.do
@@ -222,6 +207,21 @@ handleTick stateId propsId listener =
       Web.requestAnimationFrame
         (handleTick stateId propsId listener)
         window
+    pure unit
+
+requestGridRerender ::
+  forall m world.
+  MonadEffect m =>
+  State m world ->
+  Props m world ->
+  HookM m Unit
+requestGridRerender stateId propsId = do
+  { renderListener } <- Hooks.get stateId
+  withJust renderListener \listener -> do
+    window <- liftEffect Web.window
+    _ <- liftEffect $ Web.requestAnimationFrame
+      (renderGrid stateId propsId listener)
+      window
     pure unit
 
 renderGrid ::

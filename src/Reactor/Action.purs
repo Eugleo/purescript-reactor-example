@@ -1,8 +1,8 @@
-module Game.Action where
+module Reactor.Action where
 
 import Prelude
 
-import App.Reactor.State (State)
+import Reactor.State (State)
 import Control.Monad.Free (Free, foldFree, liftF)
 import Control.Monad.Rec.Class (class MonadRec, Step(..), tailRecM)
 import Control.Monad.Trans.Class (lift)

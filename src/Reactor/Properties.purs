@@ -1,11 +1,11 @@
-module App.Reactor.Properties where
+module Reactor.Properties where
 
 import Prelude
 import Event.DefaultBehavior (DefaultBehavior)
 import Event.KeypressEvent (KeypressEvent)
 import Event.MouseEvent (MouseEvent)
 import Event.TickEvent (TickEvent)
-import Game.Action (Action)
+import Reactor.Action (Action)
 import Graphics.Drawing (Drawing)
 
 type Properties m world =

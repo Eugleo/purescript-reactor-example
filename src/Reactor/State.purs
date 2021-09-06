@@ -1,4 +1,4 @@
-module App.Reactor.State where
+module Reactor.State where
 
 import Prelude
 
