@@ -9,7 +9,14 @@ import Effect (Effect)
 import Event.KeypressEvent (KeypressEvent(..))
 import Event.MouseEvent (MouseEvent(..))
 import Event.TickEvent (TickEvent(..))
-import Reactor.Action (executeDefaultBehavior, get, modify_, preventDefaultBehavior, triggerPause, utilities)
+import Reactor.Action
+  ( executeDefaultBehavior
+  , get
+  , modify_
+  , preventDefaultBehavior
+  , triggerPause
+  , utilities
+  )
 import Reactor (Reactor)
 import Graphics.Color (blue400, gray200)
 import Graphics.CoordinateSystem (canvas, grid, wrt)
@@ -50,19 +57,21 @@ world =
 
   onKey (KeypressEvent key _) = do
     { cellSize } <- utilities
-    let perSec = ((toNumber cellSize) * _)
+    let
+      perSec = ((toNumber cellSize) * _)
+      speed = perSec 30.0
     case key of
       "ArrowLeft" -> do
-        modify_ \s -> s { velocity = { x: perSec (-6.0), y: 0.0 } }
+        modify_ \s -> s { velocity = { x: -speed, y: 0.0 } }
         preventDefaultBehavior
       "ArrowRight" -> do
-        modify_ \s -> s { velocity = { x: perSec 6.0, y: 0.0 } }
+        modify_ \s -> s { velocity = { x: speed, y: 0.0 } }
         preventDefaultBehavior
       "ArrowDown" -> do
-        modify_ \s -> s { velocity = { x: 0.0, y: perSec 6.0 } }
+        modify_ \s -> s { velocity = { x: 0.0, y: speed } }
         preventDefaultBehavior
       "ArrowUp" -> do
-        modify_ \s -> s { velocity = { x: 0.0, y: perSec (-6.0) } }
+        modify_ \s -> s { velocity = { x: 0.0, y: -speed } }
         preventDefaultBehavior
       " " -> do
         triggerPause

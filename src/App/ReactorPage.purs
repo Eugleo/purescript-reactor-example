@@ -2,8 +2,6 @@ module App.ReactorPage (component) where
 
 import Prelude
 
-import Reactor.Properties (Properties) as Reactor
-import Reactor.State (State) as Reactor
 import Data.Foldable (for_)
 import Data.Int (toNumber)
 import Data.Maybe (Maybe(..))
@@ -13,15 +11,14 @@ import Data.Vector.Polymorphic (Rect(..), (><))
 import Data.Vector.Polymorphic.Class (class ToRegion, toRegion)
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
+import Effect.Class.Console (logShow)
 import Effect.Exception (throw)
 import Event.DefaultBehavior (optionallyPreventDefault)
 import Event.KeypressEvent (fromEvent) as KeypressEvent
 import Event.MouseEvent (MouseEventType(..))
-import Event.MouseEvent (fromEvent) as MouseEvent
+import Event.MouseEvent as MouseEvent
 import Event.TickEvent (TickEvent(..))
 import Event.TickEvent as TickEvent
-import Reactor.Action (evalAction)
-import Reactor (Reactor)
 import Graphics.CanvasAction (class CanvasStyle, class MonadCanvasAction, clearRect, filled, launchCanvasAff_)
 import Graphics.CanvasAction as Canvas
 import Graphics.CanvasAction.Path (FillRule(..), arcBy_, fill, moveTo, runPath)
@@ -35,6 +32,10 @@ import Halogen.Hooks (HookM, StateId)
 import Halogen.Hooks as Hooks
 import Halogen.Query.Event (eventListener)
 import Halogen.Subscription (Listener, create, notify)
+import Reactor (Reactor)
+import Reactor.Action (evalAction)
+import Reactor.Properties (Properties) as Reactor
+import Reactor.State (State) as Reactor
 import Utilities (withJust)
 import Web.HTML (window) as Web
 import Web.HTML.HTMLCanvasElement as HTMLCanvasElement
@@ -154,16 +155,18 @@ handleMouse ::
   ME.MouseEvent ->
   HookM m Unit
 handleMouse stateId propsId getEventType event = do
-  { onMouse } <- Hooks.get propsId
+  { onMouse, height, width, cellSize } <- Hooks.get propsId
   { mouseButtonPressed } <- Hooks.get stateId
   let eventType = getEventType mouseButtonPressed
   when (eventType == ButtonDown) $
     Hooks.modify_ stateId \s -> s { mouseButtonPressed = true }
   when (eventType == ButtonUp) $
     Hooks.modify_ stateId \s -> s { mouseButtonPressed = false }
-  { height, width, cellSize } <- Hooks.get propsId
-  defaultBehavior <- evalAction { height, width, cellSize } stateId
-    (onMouse (MouseEvent.fromEvent eventType 30 event))
+  let (MouseEvent.MouseEvent { x, y }) = (MouseEvent.fromEvent { height, width, cellSize } eventType event)
+  logShow { x, y }
+  defaultBehavior <-
+    evalAction { height, width, cellSize } stateId
+      (onMouse (MouseEvent.fromEvent { height, width, cellSize } eventType event))
   optionallyPreventDefault defaultBehavior (ME.toEvent event)
   requestGridRerender stateId propsId
 
