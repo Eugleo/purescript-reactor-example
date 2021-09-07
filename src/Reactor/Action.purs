@@ -119,6 +119,6 @@ evalAction { width, cellSize, height } stateId (Action action) =
       bound = case _ of
         RelativeToCanvas { x, y } ->
           { x: clip x (cs * w - 0.01), y: clip y (cs * h - 0.01) }
-        RelativeToGrid { x, y } -> { x: clip x w, y: clip y h }
+        RelativeToGrid { x, y } -> { x: clip x (w - 1.0), y: clip y (h - 1.0) }
     pure $ cc { width, cellSize, height, bound }
   go _ (Lift ma) = lift ma

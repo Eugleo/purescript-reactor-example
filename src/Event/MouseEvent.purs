@@ -38,15 +38,21 @@ foreign import offsetX :: ME.MouseEvent -> Int
 
 foreign import offsetY :: ME.MouseEvent -> Int
 
-fromEvent :: MouseEventType -> Int -> ME.MouseEvent -> MouseEvent
-fromEvent eventType cellSize event =
+fromEvent ::
+  { cellSize :: Int, width :: Int, height :: Int } ->
+  MouseEventType ->
+  ME.MouseEvent ->
+  MouseEvent
+fromEvent { cellSize, width, height } eventType event =
   MouseEvent
     { type: eventType
-    , x: offsetX event / cellSize
-    , y: offsetY event / cellSize
+    , x: clip (offsetX event / cellSize) (height - 1)
+    , y: clip (offsetY event / cellSize) (width - 1)
     , control: ME.ctrlKey event
     , alt: ME.altKey event
     , meta: ME.metaKey event
     , shift: ME.shiftKey event
     , button: ME.button event
     }
+  where
+  clip n b = max (min n b) 0
