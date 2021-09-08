@@ -2,35 +2,15 @@ module Main where
 
 import Prelude
 
-import App.ReactorPage as ReactorPage
 import Data.Int (toNumber)
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
-import Event.KeypressEvent (KeypressEvent(..))
-import Event.MouseEvent (MouseEvent(..))
-import Event.TickEvent (TickEvent(..))
-import Reactor.Action
-  ( executeDefaultBehavior
-  , get
-  , modify_
-  , preventDefaultBehavior
-  , triggerPause
-  , utilities
-  )
-import Reactor (Reactor)
-import Graphics.Color (blue400, gray200)
-import Graphics.CoordinateSystem (canvas, grid, wrt)
-import Graphics.Drawing (fill)
-import Graphics.Shape (cell)
-import Halogen.Aff as HA
-import Halogen.VDom.Driver (runUI)
-import Utilities (withJust)
+import Reactor (Reactor, blue400, canvas, cell, executeDefaultBehavior, fill, get, gray200, grid, modify_, preventDefaultBehavior, runReactor, togglePause, utilities, wrt)
+import Reactor.Common (withJust)
+import Reactor.Events (KeypressEvent(..), MouseEvent(..), TickEvent(..))
 
 main :: Effect Unit
-main =
-  HA.runHalogenAff do
-    body <- HA.awaitBody
-    runUI (ReactorPage.component world) unit body
+main = runReactor reactor
 
 type World =
   { x :: Number
@@ -40,8 +20,8 @@ type World =
   , paused :: Boolean
   }
 
-world :: forall m. Reactor m World
-world =
+reactor :: forall m. Reactor m World
+reactor =
   { title: "Moving Dot", width: 20, height: 20, init, onMouse, onKey, onTick, draw }
   where
   init = { x: 0.0, y: 0.0, velocity: { x: 0.0, y: 0.0 }, cursor: Nothing, paused: false }
@@ -74,7 +54,7 @@ world =
         modify_ \s -> s { velocity = { x: 0.0, y: -speed } }
         preventDefaultBehavior
       " " -> do
-        triggerPause
+        togglePause
         preventDefaultBehavior
       _ -> executeDefaultBehavior
 

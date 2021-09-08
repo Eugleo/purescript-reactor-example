@@ -11,34 +11,7 @@ When creating a new Spago project, you can use
 to generate this file without the comments in this block.
 -}
 { name = "purescript-grid-game-template"
-, dependencies =
-  [ "arrays"
-  , "canvas-action"
-  , "colors"
-  , "console"
-  , "effect"
-  , "exceptions"
-  , "foldable-traversable"
-  , "free"
-  , "halogen"
-  , "halogen-hooks"
-  , "halogen-subscriptions"
-  , "heterogeneous"
-  , "integers"
-  , "maybe"
-  , "partial"
-  , "polymorphic-vectors"
-  , "prelude"
-  , "psci-support"
-  , "random"
-  , "st"
-  , "tailrec"
-  , "transformers"
-  , "tuples"
-  , "web-events"
-  , "web-html"
-  , "web-uievents"
-  ]
+, dependencies = [ "grid-reactors" ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]
 }
