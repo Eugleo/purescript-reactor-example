@@ -5,17 +5,30 @@ import Prelude
 import Data.Int (toNumber)
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
-import Reactor (CoordinateSystem, Reactor, canvas, cell, executeDefaultBehavior, fill, get, grid, modify_, preventDefaultBehavior, runReactor, togglePause, utilities, wrt)
+import Reactor
+  ( CoordinateSystem
+  , Reactor
+  , canvas
+  , cell
+  , executeDefaultBehavior
+  , fill
+  , grid
+  , modify_
+  , preventDefaultBehavior
+  , runReactor
+  , togglePause
+  , utilities
+  , wrt
+  )
 import Reactor.Events (KeypressEvent(..), MouseEvent(..), TickEvent(..))
 import Reactor.Graphics.Colors as Color
 import Reactor.Graphics.CoordinateSystem (withCoords)
 import Reactor.Internal.Helpers (withJust)
 
 main :: Effect Unit
-main = runReactor reactor { title: "Puzzle", width: 20, height: 20 }
+main = runReactor reactor { title: "Moving Dot", width: 20, height: 20 }
 
 type Point = CoordinateSystem { x :: Number, y :: Number }
-type Vector = Point
 
 type World =
   { player :: Point
@@ -36,8 +49,7 @@ reactor = { init, onMouse, onKey, onTick, draw }
 
   draw { cursor, player } = do
     fill Color.blue400 $ cell player
-    withJust cursor
-      $ fill Color.gray200 <<< cell
+    withJust cursor $ fill Color.gray200 <<< cell
 
   onMouse (MouseEvent { x, y }) = do
     modify_ \w -> w { cursor = Just $ { x, y } `wrt` grid }
@@ -68,6 +80,6 @@ reactor = { init, onMouse, onKey, onTick, draw }
 
   onTick (TickEvent { delta }) = do
     { bound } <- utilities
-    modify_ \w@{ velocity: { x, y }, player } ->
+    modify_ \w@{ velocity: v, player } ->
       withCoords player \p ->
-        w { player = bound $ { x: p.x + x * delta, y: p.y + y * delta } `wrt` canvas }
+        w { player = bound $ { x: p.x + v.x * delta, y: p.y + v.y * delta } `wrt` canvas }
