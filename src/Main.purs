@@ -5,34 +5,42 @@ import Prelude
 import Data.Int (toNumber)
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
-import Reactor (Reactor, blue400, canvas, cell, executeDefaultBehavior, fill, get, gray200, grid, modify_, preventDefaultBehavior, runReactor, togglePause, utilities, wrt)
-import Reactor.Common (withJust)
+import Reactor (CoordinateSystem, Reactor, canvas, cell, executeDefaultBehavior, fill, get, grid, modify_, preventDefaultBehavior, runReactor, togglePause, utilities, wrt)
 import Reactor.Events (KeypressEvent(..), MouseEvent(..), TickEvent(..))
+import Reactor.Graphics.Colors as Color
+import Reactor.Graphics.CoordinateSystem (withCoords)
+import Reactor.Internal.Helpers (withJust)
 
 main :: Effect Unit
-main = runReactor reactor
+main = runReactor reactor { title: "Puzzle", width: 20, height: 20 }
+
+type Point = CoordinateSystem { x :: Number, y :: Number }
+type Vector = Point
 
 type World =
-  { x :: Number
-  , y :: Number
+  { player :: Point
+  , cursor :: Maybe Point
   , velocity :: { x :: Number, y :: Number }
-  , cursor :: Maybe { x :: Int, y :: Int }
   , paused :: Boolean
   }
 
 reactor :: forall m. Reactor m World
-reactor =
-  { title: "Moving Dot", width: 20, height: 20, init, onMouse, onKey, onTick, draw }
+reactor = { init, onMouse, onKey, onTick, draw }
   where
-  init = { x: 0.0, y: 0.0, velocity: { x: 0.0, y: 0.0 }, cursor: Nothing, paused: false }
+  init =
+    { player: { x: 0, y: 0 } `wrt` grid
+    , velocity: { x: 0.0, y: 0.0 }
+    , cursor: Nothing
+    , paused: false
+    }
 
-  draw s@{ cursor } = do
-    fill blue400 $ cell $ { x: s.x, y: s.y } `wrt` canvas
+  draw { cursor, player } = do
+    fill Color.blue400 $ cell player
     withJust cursor
-      $ fill gray200 <<< cell <<< (_ `wrt` grid)
+      $ fill Color.gray200 <<< cell
 
   onMouse (MouseEvent { x, y }) = do
-    modify_ \s -> s { cursor = Just { x, y } }
+    modify_ \w -> w { cursor = Just $ { x, y } `wrt` grid }
     preventDefaultBehavior
 
   onKey (KeypressEvent key _) = do
@@ -42,16 +50,16 @@ reactor =
       speed = perSec 30.0
     case key of
       "ArrowLeft" -> do
-        modify_ \s -> s { velocity = { x: -speed, y: 0.0 } }
+        modify_ \w -> w { velocity = { x: -speed, y: 0.0 } }
         preventDefaultBehavior
       "ArrowRight" -> do
-        modify_ \s -> s { velocity = { x: speed, y: 0.0 } }
+        modify_ \w -> w { velocity = { x: speed, y: 0.0 } }
         preventDefaultBehavior
       "ArrowDown" -> do
-        modify_ \s -> s { velocity = { x: 0.0, y: speed } }
+        modify_ \w -> w { velocity = { x: 0.0, y: speed } }
         preventDefaultBehavior
       "ArrowUp" -> do
-        modify_ \s -> s { velocity = { x: 0.0, y: -speed } }
+        modify_ \w -> w { velocity = { x: 0.0, y: -speed } }
         preventDefaultBehavior
       " " -> do
         togglePause
@@ -59,11 +67,7 @@ reactor =
       _ -> executeDefaultBehavior
 
   onTick (TickEvent { delta }) = do
-    { velocity, x, y } <- get
     { bound } <- utilities
-    modify_ \s ->
-      let
-        { x, y } =
-          bound $ { x: x + velocity.x * delta, y: y + velocity.y * delta } `wrt` canvas
-      in
-        s { x = x, y = y }
+    modify_ \w@{ velocity: { x, y }, player } ->
+      withCoords player \p ->
+        w { player = bound $ { x: p.x + x * delta, y: p.y + y * delta } `wrt` canvas }
